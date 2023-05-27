@@ -1,57 +1,82 @@
-import math
+import random
 
-def minimax_alpha_beta(palitos, alpha, beta, es_turno_max):
-    if palitos == 0:
-        if es_turno_max:
-            return -1  
+def palitos(n):
+    print("Palitos: " + "|" * n)
+
+def player_turn(n):
+    while True:
+        choice = input("¿Cuántos palitos quieres retirar? (1-3): ")
+        if choice.isdigit() and int(choice) in [1, 2, 3]:
+            choice = int(choice)
+            if choice > n:
+                print("No puedes retirar más palitos de los que hay en total.")
+            else:
+                n = n - choice
+                palitos(n)
+                return n
         else:
-            return 1   
+            print("Ingresa un número válido.")
 
-    if es_turno_max:
-        valor_max = -math.inf
-        for i in range(1, 4):
-            if palitos >= i:
-                valor = minimax_alpha_beta(palitos - i, alpha, beta, False)
-                valor_max = max(valor_max, valor)
-                alpha = max(alpha, valor_max)
+def IA_turno(n):
+    if n == 1:
+        print("Ganaste")
+        return 0
+
+    best_choice = None
+    best_value = float("inf")
+    alpha = float("-inf")
+    beta = float("inf")
+
+    for choice in [1, 2, 3]:
+        if n - choice >= 1:
+            value = minimax_alpha_beta(n - choice, False, alpha, beta)
+            if value < best_value:
+                best_value = value
+                best_choice = choice
+            beta = min(beta, best_value)
+            if beta <= alpha:
+                break
+
+    print("La IA quita", best_choice, "palitos.")
+    n = n - best_choice
+    palitos(n)
+    return n
+
+def minimax_alpha_beta(n, is_maximizing, alpha, beta):
+    if n == 1:
+        return 1 if is_maximizing else -1
+
+    if is_maximizing:
+        best_value = float("-inf")
+        for choice in [1, 2, 3]:
+            if n - choice >= 1:
+                value = minimax_alpha_beta(n - choice, False, alpha, beta)
+                best_value = max(best_value, value)
+                alpha = max(alpha, best_value)
                 if alpha >= beta:
                     break
-        return valor_max
+        return best_value
     else:
-        valor_min = math.inf
-        for i in range(1, 4):
-            if palitos >= i:
-                valor = minimax_alpha_beta(palitos - i, alpha, beta, True)
-                valor_min = min(valor_min, valor)
-                beta = min(beta, valor_min)
+        best_value = float("inf")
+        for choice in [1, 2, 3]:
+            if n - choice >= 1:
+                value = minimax_alpha_beta(n - choice, True, alpha, beta)
+                best_value = min(best_value, value)
+                beta = min(beta, best_value)
                 if beta <= alpha:
                     break
-        return valor_min
+        return best_value
 
-def jugar_palitos():
-    palitos_totales = 13  # Número total de palitos
-    turno_max = True  # Indica si es el turno del jugador Max
+def jugar():
+    n = random.randint(20, 23)
+    palitos(n)
 
-    while palitos_totales > 0:
-        print("Palitos restantes:", palitos_totales)
+    while n > 0:
+        n = player_turn(n)
+        if n == 0:
+            print("La IA ganó")
+            break
+        n = IA_turno(n)
 
-        if turno_max:
-            print("Turno del jugador humano")
-            palitos_retirados = int(input("Ingresa el número de palitos que deseas retirar (1-3): "))
-            if not (1 <= palitos_retirados <= 3 and palitos_retirados <= palitos_totales):
-                print("Movimiento inválido. Intenta nuevamente.")
-                continue
-        else:
-            print("Turno de la máquina")
-            palitos_retirados = minimax_alpha_beta(palitos_totales, -math.inf, math.inf, True)
-            print("La máquina retira", palitos_retirados)
+jugar()
 
-        palitos_totales -= palitos_retirados
-        turno_max = not turno_max
-
-    if turno_max:
-        print("Ganaste!")
-    else:
-        print("La IA ganó")
-        
-jugar_palitos()
